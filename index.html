@@ -1,0 +1,750 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CompTIA A+ Master Lab: Generic Syntax & Compliance Audit</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: Arial, sans-serif;
+      display: flex;
+      height: 100vh;
+      margin: 0;
+      background: #1e1e1e;
+      color: #fff;
+      overflow: hidden;
+    }
+
+    /* Left Panel: Tasks, Scenarios & Questions */
+    .tasks {
+      width: 44%;
+      padding: 20px;
+      background: #252526;
+      border-right: 2px solid #3c3c3c;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+    }
+    h2 { color: #58a6ff; font-size: 1.25rem; margin-bottom: 10px; }
+    
+    .scenario-picker {
+      background: #333;
+      padding: 12px;
+      border-radius: 6px;
+      margin-bottom: 12px;
+      border: 1px solid #454545;
+    }
+    label { font-weight: bold; color: #3498db; display: block; margin-bottom: 6px; font-size: 0.88em; }
+    select {
+      width: 100%;
+      padding: 8px;
+      background: #1e1e1e;
+      color: #7ee787;
+      border: 1px solid #555;
+      border-radius: 4px;
+      font-family: monospace;
+      font-size: 13px;
+    }
+    select:disabled {
+      background: #111;
+      color: #888;
+      border-color: #333;
+      cursor: not-allowed;
+    }
+
+    .reset-btn {
+      width: 100%;
+      padding: 8px;
+      background: #e67e22;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      font-weight: bold;
+      cursor: pointer;
+      margin-top: 8px;
+      font-size: 0.85em;
+    }
+    .reset-btn:hover { background: #d35400; }
+
+    .instruction-card {
+      background: #1a2634;
+      border: 1px solid #2980b9;
+      padding: 12px;
+      border-radius: 5px;
+      margin-bottom: 15px;
+      font-size: 0.85em;
+      line-height: 1.4;
+    }
+    .instruction-card strong { color: #f1c40f; }
+    .instruction-card code {
+      background: #000;
+      color: #7ee787;
+      padding: 2px 5px;
+      border-radius: 3px;
+      font-family: monospace;
+    }
+
+    .task {
+      background: #333;
+      padding: 10px 12px;
+      margin-bottom: 8px;
+      border-radius: 5px;
+      border-left: 4px solid #f39c12;
+      font-size: 0.85em;
+    }
+    .task.done { border-left-color: #2ecc71; }
+    .status {
+      float: right;
+      font-size: 0.8em;
+      padding: 2px 6px;
+      background: #555;
+      border-radius: 3px;
+    }
+    .task.done .status { background: #2ecc71; color: #000; }
+
+    /* Questionnaire Section */
+    .quiz-section {
+      background: #2d2d30;
+      border: 1px solid #007acc;
+      border-radius: 6px;
+      padding: 15px;
+      margin-top: 15px;
+    }
+    .quiz-section h3 {
+      color: #f1c40f;
+      font-size: 1.05rem;
+      margin-bottom: 8px;
+    }
+    .quiz-item {
+      margin-bottom: 12px;
+    }
+    .quiz-item label {
+      color: #dcdcdc;
+      font-size: 0.82em;
+      font-weight: normal;
+    }
+
+    .action-btn {
+      width: 100%;
+      padding: 10px;
+      background: #3498db;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-weight: bold;
+      margin-top: 10px;
+    }
+    .action-btn:hover { background: #2980b9; }
+
+    .view-btn {
+      display: none;
+      width: 100%;
+      padding: 10px;
+      background: #27ae60;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-weight: bold;
+      margin-top: 10px;
+    }
+    .view-btn:hover { background: #219150; }
+
+    /* Right Panel: Interactive Terminal Window */
+    .terminal {
+      width: 56%;
+      padding: 20px;
+      background: #000;
+      font-family: monospace;
+      font-size: 14px;
+      display: flex;
+      flex-direction: column;
+    }
+    .terminal-header {
+      color: #8b949e;
+      font-size: 0.8em;
+      margin-bottom: 10px;
+      border-bottom: 1px solid #333;
+      padding-bottom: 5px;
+    }
+    .log { flex: 1; overflow-y: auto; white-space: pre-wrap; line-height: 1.4; }
+    .input-line { display: flex; margin-top: 10px; }
+    .prompt { color: #3498db; margin-right: 8px; font-weight: bold; }
+    input[type="text"].terminal-input {
+      flex: 1;
+      background: transparent;
+      border: none;
+      color: #2ecc71;
+      font-family: monospace;
+      font-size: 14px;
+      outline: none;
+    }
+    .success { color: #2ecc71; }
+    .error { color: #e74c3c; }
+    .explanation { color: #f1c40f; font-style: italic; margin: 4px 0 8px 0; display: block; }
+    .output-text { color: #cccccc; }
+
+    /* Modal Styling */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0,0,0,0.8);
+      justify-content: center;
+      align-items: center;
+      z-index: 100;
+    }
+    .modal-content {
+      background: #fff;
+      color: #333;
+      padding: 20px;
+      border-radius: 8px;
+      max-width: 580px;
+      width: 90%;
+      max-height: 85vh;
+      overflow-y: auto;
+    }
+    textarea {
+      width: 100%;
+      height: 140px;
+      font-family: monospace;
+      margin: 10px 0;
+      padding: 8px;
+      box-sizing: border-box;
+      background: #f8f9fa;
+      border: 1px solid #ccc;
+    }
+    .modal-btn {
+      background: #27ae60;
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      cursor: pointer;
+      border-radius: 4px;
+      font-weight: bold;
+    }
+    .close-btn {
+      background: #e74c3c;
+      color: white;
+      border: none;
+      padding: 6px 12px;
+      float: right;
+      cursor: pointer;
+      border-radius: 4px;
+    }
+    
+    .audit-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+      font-size: 0.85em;
+    }
+    .audit-table th, .audit-table td {
+      border: 1px solid #ddd;
+      padding: 6px 10px;
+      text-align: left;
+    }
+    .audit-table th {
+      background-color: #f2f2f2;
+    }
+    .badge-fail {
+      background-color: #e74c3c;
+      color: white;
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-size: 0.8em;
+      font-weight: bold;
+    }
+    .badge-pass {
+      background-color: #2ecc71;
+      color: white;
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-size: 0.8em;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Left Side: Workflow & Environment Quiz -->
+  <div class="tasks">
+    <h2>CompTIA A+ Core 2 Master Lab</h2>
+
+    <!-- Scenario Picker (Locked / Disabled) -->
+    <div class="scenario-picker">
+      <label for="scenarioSelect">Assigned Scenario (Locked):</label>
+      <select id="scenarioSelect" disabled>
+        <option value="hr">Scenario 1: HR Department (Sarah -> HR_Group)</option>
+        <option value="dev">Scenario 2: Software Dev (Marcus -> Developers)</option>
+        <option value="admin">Scenario 3: IT Security (Alex -> IT_Admins)</option>
+      </select>
+      <button class="reset-btn" onclick="randomizeScenario()">🔄 Randomize Assignment & Reset</button>
+    </div>
+
+    <!-- Active Guidance Card -->
+    <div class="instruction-card" id="guidanceBox"></div>
+
+    <!-- Workflow Steps Tracker with Generic Syntax Display -->
+    <div class="task" id="task1">
+      <span class="status" id="st1">Pending</span>
+      <strong>Step 1: Create Employee Account</strong>
+      <p>Use <code>net user &lt;username&gt; &lt;password&gt; /add</code></p>
+    </div>
+    
+    <div class="task" id="task2">
+      <span class="status" id="st2">Pending</span>
+      <strong>Step 2: Assign Employee to Group</strong>
+      <p>Use <code>net localgroup &lt;group&gt; &lt;username&gt; /add</code></p>
+    </div>
+
+    <div class="task" id="task3">
+      <span class="status" id="st3">Pending</span>
+      <strong>Step 3: Draft Policy Directive</strong>
+      <p>Use <code>notepad &lt;filename.inf&gt;</code></p>
+    </div>
+
+    <div class="task" id="task4">
+      <span class="status" id="st4">Pending</span>
+      <strong>Step 4: Compile Policy to Database</strong>
+      <p>Use <code>secedit /configure /db local.sdb /cfg &lt;filename.inf&gt;</code></p>
+    </div>
+
+    <div class="task" id="task5">
+      <span class="status" id="st5">Pending</span>
+      <strong>Step 5: Force Policy Engine Update</strong>
+      <p>Use <code>gpupdate /force</code></p>
+    </div>
+
+    <div class="task" id="task6">
+      <span class="status" id="st6">Pending</span>
+      <strong>Step 6: Generate Execution & Compliance Report</strong>
+      <p>Use <code>gpresult /h report.html</code></p>
+    </div>
+
+    <button class="view-btn" id="viewReportBtn" onclick="openReport()">📄 View Generated report.html</button>
+
+    <!-- Environment Verification Questionnaire -->
+    <div class="quiz-section">
+      <h3>Environment Audit Questionnaire</h3>
+      <p style="font-size: 0.78em; color: #aaa; margin-bottom: 10px;">
+        Use commands like <code>whoami</code>, <code>ipconfig /all</code>, and <code>gpresult</code> in the terminal to inspect the system and select the correct answers below.
+      </p>
+
+      <div class="quiz-item">
+        <label for="ansGpo">1. Which GPO object is actively applied to this workstation?</label>
+        <select id="ansGpo">
+          <option value="">-- Select Applied GPO --</option>
+          <option value="Default Domain Policy">Default Domain Policy</option>
+          <option value="Workstation_Security_Baseline">Workstation_Security_Baseline</option>
+          <option value="Guest_Restriction_GPO">Guest_Restriction_GPO</option>
+        </select>
+      </div>
+
+      <div class="quiz-item">
+        <label for="ansHost">2. What is the Host Name of this local workstation?</label>
+        <select id="ansHost">
+          <option value="">-- Select Host Name --</option>
+          <option value="DESKTOP-892X01">DESKTOP-892X01</option>
+          <option value="CORP-WS-01">CORP-WS-01</option>
+          <option value="WIN11-LAB-PC">WIN11-LAB-PC</option>
+        </select>
+      </div>
+
+      <div class="quiz-item">
+        <label for="ansCorp">3. Which Corporation owns this environment infrastructure?</label>
+        <select id="ansCorp">
+          <option value="">-- Select Corporation --</option>
+          <option value="Globex Corporation">Globex Corporation</option>
+          <option value="Initech Enterprises">Initech Enterprises</option>
+          <option value="Cyberdyne Systems">Cyberdyne Systems</option>
+        </select>
+      </div>
+
+      <div class="quiz-item">
+        <label for="ansDomain">4. What is the Primary Domain Name for this system?</label>
+        <select id="ansDomain">
+          <option value="">-- Select Primary Domain --</option>
+          <option value="initech.local">initech.local</option>
+          <option value="globex.corp">globex.corp</option>
+          <option value="cyberdyne.net">cyberdyne.net</option>
+        </select>
+      </div>
+
+      <button class="action-btn" onclick="checkAnswers()">Submit Audit Answers</button>
+      <div id="quizFeedback" style="margin-top: 10px; font-weight: bold; font-size: 0.85em;"></div>
+    </div>
+  </div>
+
+  <!-- Right Side: Terminal Window -->
+  <div class="terminal">
+    <div class="terminal-header">
+      Administrator: Command Prompt [Interactive CompTIA PBQ Mode]
+    </div>
+    <div class="log" id="log">Microsoft Windows [Version 10.0.19045]
+Type 'help' to review available command line utilities.
+
+Follow the assignment instructions on the left panel to begin.
+
+</div>
+    <div class="input-line">
+      <span class="prompt">C:\&gt;</span>
+      <input type="text" id="cmd" class="terminal-input" autofocus autocomplete="off" spellcheck="false">
+    </div>
+  </div>
+
+  <!-- Modal 1: In-Browser Notepad Editor -->
+  <div class="modal" id="notepadModal">
+    <div class="modal-content">
+      <h3 id="editorTitle">Notepad - Policy.inf</h3>
+      <p style="font-size: 0.85em; color: #555; margin-top: 5px;">Type the exact required policy rule from the instructions on the left:</p>
+      <textarea id="editorText"></textarea>
+      <button class="modal-btn" onclick="savePolicyFile()">Save & Exit</button>
+    </div>
+  </div>
+
+  <!-- Modal 2: Generated HTML Report View -->
+  <div class="modal" id="reportModal">
+    <div class="modal-content">
+      <button class="close-btn" onclick="closeReport()">X</button>
+      <h2>Group Policy Compliance Audit (report.html)</h2>
+      <hr style="margin: 10px 0;">
+      <p><strong>Target Employee:</strong> <span id="reportEmpName" style="color:#2980b9; font-weight:bold;"></span></p>
+      <p><strong>Assigned Group:</strong> <span id="reportGroupName" style="color:#27ae60; font-weight:bold;"></span></p>
+      <p><strong>Active Template:</strong> <span id="reportFileName"></span></p>
+      <p><strong>Enforced Policy Rule:</strong> <span id="reportPolicySetting" style="color:#e67e22; font-weight:bold;"></span></p>
+      <hr style="margin: 10px 0;">
+      
+      <h3>Password Policy Compliance Audit</h3>
+      <p style="font-size: 0.82em; color: #555; margin-bottom: 8px;">
+        Evaluation of current employee passwords against active security policy directives:
+      </p>
+
+      <table class="audit-table">
+        <thead>
+          <tr>
+            <th>Employee</th>
+            <th>Password Evaluated</th>
+            <th>Length</th>
+            <th>Compliance Status</th>
+            <th>Action Required</th>
+          </tr>
+        </thead>
+        <tbody id="auditTableBody">
+          <!-- Dynamic Audit Rows -->
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <script>
+    const input = document.getElementById('cmd');
+    const log = document.getElementById('log');
+
+    let currentStep = 1;
+    let activeScenario = 'hr';
+    let targetUser = 'sarah_m';
+    let userEnteredPassword = '';
+    let targetGroup = 'HR_Group';
+    let targetFileName = 'HR_Policy.inf';
+    let requiredDirective = 'MinimumPasswordLength = 14';
+    let savedPolicyContent = '';
+
+    const existingAccounts = [
+      { user: 'john_dev', pass: 'p@ss1' },
+      { user: 'lisa_mgr', pass: 'Secured2024!' },
+      { user: 'david_admin', pass: 'ComplexP@ssword99!' }
+    ];
+
+    const scenarioKeys = ['hr', 'dev', 'admin'];
+
+    const scenarios = {
+      hr: {
+        user: 'sarah_m',
+        group: 'HR_Group',
+        file: 'HR_Policy.inf',
+        directive: 'MinimumPasswordLength = 14',
+        guidance: '<strong>ASSIGNMENT PARAMETERS:</strong><br>• Target Username: <code>sarah_m</code> (Password: <em>your choice</em>)<br>• Target Group: <code>HR_Group</code><br>• Policy Template File: <code>HR_Policy.inf</code><br>• Required Policy Rule: <code>MinimumPasswordLength = 14</code>'
+      },
+      dev: {
+        user: 'marcus_v',
+        group: 'Developers',
+        file: 'Dev_Policy.inf',
+        directive: 'MinimumPasswordLength = 14',
+        guidance: '<strong>ASSIGNMENT PARAMETERS:</strong><br>• Target Username: <code>marcus_v</code> (Password: <em>your choice</em>)<br>• Target Group: <code>Developers</code><br>• Policy Template File: <code>Dev_Policy.inf</code><br>• Required Policy Rule: <code>MinimumPasswordLength = 14</code>'
+      },
+      admin: {
+        user: 'alex_t',
+        group: 'IT_Admins',
+        file: 'Audit_Policy.inf',
+        directive: 'MinimumPasswordLength = 14',
+        guidance: '<strong>ASSIGNMENT PARAMETERS:</strong><br>• Target Username: <code>alex_t</code> (Password: <em>your choice</em>)<br>• Target Group: <code>IT_Admins</code><br>• Policy Template File: <code>Audit_Policy.inf</code><br>• Required Policy Rule: <code>MinimumPasswordLength = 14</code>'
+      }
+    };
+
+    function randomizeScenario() {
+      const randomIndex = Math.floor(Math.random() * scenarioKeys.length);
+      activeScenario = scenarioKeys[randomIndex];
+      
+      const selectElem = document.getElementById('scenarioSelect');
+      selectElem.value = activeScenario;
+
+      const data = scenarios[activeScenario];
+      targetUser = data.user;
+      targetGroup = data.group;
+      targetFileName = data.file;
+      requiredDirective = data.directive;
+
+      document.getElementById('guidanceBox').innerHTML = data.guidance;
+      document.getElementById('editorTitle').innerText = `Notepad - ${targetFileName}`;
+      document.getElementById('editorText').placeholder = data.directive;
+
+      resetLab();
+      log.innerHTML = `Microsoft Windows [Version 10.0.19045]\nType 'help' to review available command line utilities.\n\n[RANDOM SCENARIO ASSIGNED]: Target Employee '${targetUser}'. Begin Step 1.\n\n`;
+    }
+
+    function resetLab() {
+      currentStep = 1;
+      userEnteredPassword = '';
+      savedPolicyContent = '';
+      document.getElementById('viewReportBtn').style.display = 'none';
+      for (let i = 1; i <= 6; i++) {
+        document.getElementById(`task${i}`).classList.remove('done');
+        document.getElementById(`st${i}`).innerText = 'Pending';
+      }
+      document.getElementById('quizFeedback').innerText = '';
+    }
+
+    input.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') {
+        const command = input.value.trim();
+        if (!command) return;
+
+        print(`C:\\> ${command}`);
+        checkCommand(command);
+        input.value = '';
+      }
+    });
+
+    function print(text, colorClass = '') {
+      const div = document.createElement('div');
+      if (colorClass) div.className = colorClass;
+      div.innerText = text;
+      log.appendChild(div);
+      log.scrollTop = log.scrollHeight;
+    }
+
+    function completeTask(num) {
+      document.getElementById(`task${num}`).classList.add('done');
+      document.getElementById(`st${num}`).innerText = 'Done!';
+    }
+
+    function checkCommand(rawCmd) {
+      const cmd = rawCmd.trim();
+      const lowerCmd = cmd.toLowerCase().replace(/\s+/g, ' ');
+
+      if (lowerCmd === 'help') {
+        print('AVAILABLE UTILITIES & SYNTAX TEMPLATES:', 'success');
+        print('  • net user <username> <password> /add');
+        print('  • net localgroup <group> <username> /add');
+        print('  • notepad <filename.inf>');
+        print('  • secedit /configure /db local.sdb /cfg <filename.inf>');
+        print('  • gpupdate /force');
+        print('  • gpresult /h report.html');
+        print('  • whoami');
+        print('  • ipconfig');
+        print('  • cls');
+      } 
+      else if (lowerCmd === 'cls') {
+        log.innerHTML = '';
+      }
+      else if (lowerCmd.startsWith('whoami')) {
+        print('initech\\admin_user', 'output-text');
+        print('INFO: Domain = initech.local | Corporation = Initech Enterprises', 'explanation');
+      }
+      else if (lowerCmd.startsWith('ipconfig')) {
+        print('Windows IP Configuration\n\n   Host Name . . . . . . . . . . . . : CORP-WS-01\n   Primary Dns Suffix  . . . . . . . : initech.local\n   IPv4 Address. . . . . . . . . . . : 192.168.10.45', 'output-text');
+        print('INFO: Host Name = CORP-WS-01 | Domain = initech.local', 'explanation');
+      }
+      // STEP 1: NET USER
+      else if (currentStep === 1) {
+        const parts = cmd.split(/\s+/);
+        if (parts.length >= 4 && parts[0].toLowerCase() === 'net' && parts[1].toLowerCase() === 'user' && parts[parts.length - 1].toLowerCase() === '/add') {
+          const userArg = parts[2].toLowerCase();
+          if (userArg === targetUser.toLowerCase()) {
+            userEnteredPassword = parts[3];
+            print(`The command completed successfully. Account '${targetUser}' created with specified password.`, 'output-text');
+            print(`WHY WE DO THIS: Creates local user accounts. (Password stored: "${userEnteredPassword}")`, 'explanation');
+            completeTask(1);
+            currentStep = 2;
+          } else {
+            print(`ERROR: Target user for this assignment must be '${targetUser}'.`, 'error');
+          }
+        } else {
+          print(`ERROR: Syntax format: net user <username> <password> /add`, 'error');
+        }
+      }
+      // STEP 2: NET LOCALGROUP
+      else if (currentStep === 2) {
+        const expectedGroupCmd = `net localgroup ${targetGroup.toLowerCase()} ${targetUser} /add`;
+        if (lowerCmd === expectedGroupCmd) {
+          print(`The command completed successfully. Added '${targetUser}' to '${targetGroup}'.`, 'output-text');
+          print('WHY WE DO THIS: Assigns employees to role-based security groups.', 'explanation');
+          completeTask(2);
+          currentStep = 3;
+        } else {
+          print(`ERROR: Syntax format: net localgroup <group> <username> /add`, 'error');
+        }
+      }
+      // STEP 3: NOTEPAD
+      else if (currentStep === 3) {
+        const expectedNotepad = `notepad ${targetFileName.toLowerCase()}`;
+        if (lowerCmd === expectedNotepad) {
+          document.getElementById('notepadModal').style.display = 'flex';
+        } else {
+          print(`ERROR: Syntax format: notepad <filename.inf>`, 'error');
+        }
+      }
+      // STEP 4: SECEDIT
+      else if (currentStep === 4) {
+        const expectedSecedit = `secedit /configure /db local.sdb /cfg ${targetFileName.toLowerCase()}`;
+        if (lowerCmd === expectedSecedit) {
+          print(`[SECEDIT]: Successfully read '${targetFileName}' and compiled configuration into local database.`, 'output-text');
+          print('WHY WE DO THIS: Compiles security template files into active system policy databases.', 'explanation');
+          completeTask(4);
+          currentStep = 5;
+        } else {
+          print(`ERROR: Syntax format: secedit /configure /db local.sdb /cfg <filename.inf>`, 'error');
+        }
+      }
+      // STEP 5: GPUPDATE
+      else if (currentStep === 5) {
+        if (lowerCmd === 'gpupdate /force') {
+          print('Updating policy...\nComputer Policy update has completed successfully.\nUser Policy update has completed successfully.', 'output-text');
+          print('WHY WE DO THIS: Forces the operating system to immediately re-evaluate policy settings.', 'explanation');
+          completeTask(5);
+          currentStep = 6;
+        } else {
+          print('ERROR: Type "gpupdate /force" to refresh policy engine.', 'error');
+        }
+      }
+      // STEP 6: GPRESULT
+      else if (currentStep === 6) {
+        if (lowerCmd.startsWith('gpresult')) {
+          if (lowerCmd === 'gpresult /h report.html') {
+            print('SUCCESS: Policy execution and compliance audit results written to "report.html".', 'output-text');
+            print('WHY WE DO THIS: Generates HTML diagnostic proof for IT compliance audits.', 'explanation');
+            completeTask(6);
+            document.getElementById('viewReportBtn').style.display = 'block';
+            currentStep = 7;
+          } else if (lowerCmd === 'gpresult /r') {
+            print('COMPUTER SETTINGS\n------------------\nApplied Group Policy Objects:\n    Workstation_Security_Baseline\n    Local Group Policy', 'output-text');
+          } else {
+            print('ERROR: Use "gpresult /h report.html" to complete Step 6.', 'error');
+          }
+        } else {
+          print('ERROR: Type "gpresult /h report.html" to finish Step 6.', 'error');
+        }
+      } 
+      else if (lowerCmd === 'gpresult /r') {
+        print('COMPUTER SETTINGS\n------------------\nApplied Group Policy Objects:\n    Workstation_Security_Baseline\n    Local Group Policy', 'output-text');
+      }
+      else {
+        print('All steps completed! Click "View Generated report.html" on the left panel to review password compliance results.', 'success');
+      }
+      print('');
+    }
+
+    function savePolicyFile() {
+      const text = document.getElementById('editorText').value.trim();
+      const requiredClean = requiredDirective.toLowerCase().replace(/\s+/g, '');
+      const inputClean = text.toLowerCase().replace(/\s+/g, '');
+
+      if (inputClean.includes(requiredClean)) {
+        savedPolicyContent = text;
+        document.getElementById('notepadModal').style.display = 'none';
+        print(`SUCCESS: File '${targetFileName}' written with directive: "${text}"`, 'success');
+        print('WHY WE DO THIS: Saves plain text policy configuration files before database compilation.', 'explanation');
+        completeTask(3);
+        currentStep = 4;
+      } else {
+        alert(`Error: You must include the required policy directive: "${requiredDirective}"`);
+      }
+    }
+
+    function openReport() {
+      document.getElementById('reportEmpName').innerText = targetUser;
+      document.getElementById('reportGroupName').innerText = targetGroup;
+      document.getElementById('reportFileName').innerText = targetFileName;
+      document.getElementById('reportPolicySetting').innerText = savedPolicyContent || requiredDirective;
+
+      const tableBody = document.getElementById('auditTableBody');
+      tableBody.innerHTML = '';
+
+      const allUsersToEvaluate = [
+        { user: targetUser, pass: userEnteredPassword },
+        ...existingAccounts
+      ];
+
+      const requiredLength = 14;
+
+      allUsersToEvaluate.forEach(acct => {
+        const passLen = acct.pass.length;
+        const isCompliant = passLen >= requiredLength;
+
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td><strong>${acct.user}</strong></td>
+          <td><code>${acct.pass}</code></td>
+          <td>${passLen} characters</td>
+          <td>${isCompliant ? '<span class="badge-pass">COMPLIANT</span>' : '<span class="badge-fail">NON-COMPLIANT</span>'}</td>
+          <td style="${isCompliant ? 'color: #27ae60;' : 'color: #c0392b; font-weight: bold;'}">
+            ${isCompliant ? 'No Action Needed' : '⚠️ MUST UPDATE PASSWORD'}
+          </td>
+        `;
+        tableBody.appendChild(row);
+      });
+
+      document.getElementById('reportModal').style.display = 'flex';
+    }
+
+    function closeReport() {
+      document.getElementById('reportModal').style.display = 'none';
+    }
+
+    function checkAnswers() {
+      const gpo = document.getElementById('ansGpo').value;
+      const host = document.getElementById('ansHost').value;
+      const corp = document.getElementById('ansCorp').value;
+      const domain = document.getElementById('ansDomain').value;
+      const feedback = document.getElementById('quizFeedback');
+
+      if (!gpo || !host || !corp || !domain) {
+        feedback.className = 'error';
+        feedback.innerText = '⚠️ Please select an answer for all 4 questions.';
+        return;
+      }
+
+      let score = 0;
+      if (gpo === 'Workstation_Security_Baseline') score++;
+      if (host === 'CORP-WS-01') score++;
+      if (corp === 'Initech Enterprises') score++;
+      if (domain === 'initech.local') score++;
+
+      if (score === 4) {
+        feedback.className = 'success';
+        feedback.innerText = '✅ Perfect Score! 4/4 correct answers. Environment audit complete!';
+      } else {
+        feedback.className = 'error';
+        feedback.innerText = `❌ Score: ${score}/4. Check your terminal outputs (whoami, ipconfig, gpresult /r) and try again.`;
+      }
+    }
+
+    // Initialize with a randomized scenario on initial page load
+    randomizeScenario();
+  </script>
+
+</body>
+</html>
